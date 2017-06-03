@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-import module.ctrl as ctrl
 if __name__ == "__main__":
+	import module.ctrl as ctrl
 	ctr = ctrl.controller()
 	ctr.run()
 else:
