@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-
+import module.ctrl as ctrl
 if __name__ == "__main__":
-	import module.ctrl as ctrl
 	ctr = ctrl.controller()
 	ctr.run()
 else:
@@ -15,7 +14,7 @@ else:
 	factory = sdl2.ext.SpriteFactory(sdl2.ext.SOFTWARE)
 	sprite = factory.from_image(RESOURCES.get_path("triggered.png"))
 	spriterenderer = factory.create_sprite_render_system(window)
-	running=True
+	running = True
 	while running:
 		events=sdl2.ext.get_events()
 		for event in events:

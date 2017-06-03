@@ -1,2 +1,2 @@
-class view:
+class View:
     pass
