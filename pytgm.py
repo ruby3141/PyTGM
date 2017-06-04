@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 if __name__ == "__main__":
 	import module.ctrl as ctrl
-	ctr = ctrl.controller()
+	ctr = ctrl.Ctrl()
 	ctr.run()
 else:
 	import sdl2

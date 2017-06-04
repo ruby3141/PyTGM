@@ -92,7 +92,7 @@ class Model:
 			else:
 				return true
 		except:
-			return false:
+			return False
 
 	def colcheck(self, piece, piecepos):
 		arrsize = len(piecedict[piece][piecepos[2]])
@@ -113,9 +113,9 @@ class Model:
 		elif (self.next[0] in ('l', 'j') and \
 			((temppos[2] == 0 and checkpoint(temppos[0] + 2, temppos[1] + 1) == False) or \
 			(temppos[2] == 2 and checkpoint(temppos[0] + 1, temppos[1] + 1) == False))):
-			if (self.next[0] == 'j' and checkpoint([temppos[0], temppos[1] + 2 == True) or \
-				(self.next[0] == 'l' and checkpoint([temppos[0], temppos[1] == True):
-			return False
+			if (self.next[0] == 'j' and checkpoint([temppos[0], temppos[1] + 2]) == True) or \
+				(self.next[0] == 'l' and checkpoint([temppos[0], temppos[1]]) == True):
+				return False
 		temppos[2] += direction; temppos[2] %= len(self.piecedict[self.next[0]])
 		if colcheck(self.next[0], temppos):
 			self.piecepos = temppos; return True
@@ -191,17 +191,19 @@ class Model:
 			for r, row in enumerate(col):
 				if row != 0:
 					self.stack[self.piecepos[0]-c][self.piecepos[1]+r] = r
+		self.next[0] = None
 
 	def stackcheck(self):
 		cline = []
 		for i, row in enumerate(self.stack):
-			if block > 0 for block in row:
+			if all(block > 0 for block in row):
 				cline.append(i)
 		return cline
 
 	def processor(self):
 		self.tickcount = 0
 		delaycounter = 0
+		yield #for start
 		while(True):
 			#Spawn phase
 			self.setspeedvar()
@@ -254,20 +256,23 @@ class Model:
 			#Line Clear Delay + Line Clear ARE
 			if cline != []:
 				while delaycounter >= self.speedvar[5]:
-					delaycounter += 1
 					yield cline
+					self.tickcount += 1
+					delaycounter += 1
 				for c in cline:
-					self.stack.pop(c):
+					self.stack.pop(c)
 					self.stack.append(PosList([0]*10))
 				delaycounter = 0
 				while delaycounter >= self.speedvar[2]:
-					delaycounter += 1
 					yield
+					self.tickcount += 1
+					delaycounter += 1
 			#ARE without Line Clear
 			else:
-				while delaycounter >= self.speedvar[2]:
-					delaycounter += 1
+				while delaycounter >= self.speedvar[1]:
 					yield
+					self.tickcount += 1
+					delaycounter += 1
 			self.next.popleft()
 			self.next.append(next(self.randomizer))
 		return "Game Over"
