@@ -42,17 +42,18 @@ class PosList(list): #disable negative index of array to handle sth with excepti
 
 class Model:
 	piecedict = {
+		'':((),(),(),()),
 		'j':(((0,0,0),(1,1,1),(0,0,1)),((0,1,1),(0,1,0),(0,1,0)), \
 			((0,0,0),(1,0,0),(1,1,1)),((0,1,0),(0,1,0),(1,1,0))),
-		'i':(((0,0,0,0),(1,1,1,1),(0,0,0,0),(0,0,0,0)), \
-			((0,0,1,0),(0,0,1,0),(0,0,1,0),(0,0,1,0))),
-		'z':(((0,0,0),(1,1,0),(0,1,1)),((0,0,1),(0,1,1),(0,1,0))),
-		'l':(((0,0,0),(1,1,1),(1,0,0)),((0,1,0),(0,1,0),(0,1,1)), \
-			((0,0,0),(0,0,1),(1,1,1)),((1,1,0),(0,1,0),(0,1,0))),
-		'o':(((0,0,0),(0,1,1),(0,1,1)),),
-		't':(((0,0,0),(1,1,1),(0,1,0)),((0,1,0),(0,1,1),(0,1,0)), \
-			((0,0,0),(0,1,0),(1,1,1)),((0,1,0),(1,1,0),(0,1,0))),
-		's':(((0,0,0),(0,1,1),(1,1,0)),((1,0,0),(1,1,0),(0,1,0)))}
+		'i':(((0,0,0,0),(2,2,2,2),(0,0,0,0),(0,0,0,0)), \
+			((0,0,2,0),(0,0,2,0),(0,0,2,0),(0,0,2,0))),
+		'z':(((0,0,0),(3,3,0),(0,3,3)),((0,0,3),(0,3,3),(0,3,0))),
+		'l':(((0,0,0),(4,4,4),(4,0,0)),((0,4,0),(0,4,0),(0,4,4)), \
+			((0,0,0),(0,0,4),(4,4,4)),((4,4,0),(0,4,0),(0,4,0))),
+		'o':(((0,0,0),(0,5,5),(0,5,5)),),
+		't':(((0,0,0),(6,6,6),(0,6,0)),((0,6,0),(0,6,6),(0,6,0)), \
+			((0,0,0),(0,6,0),(6,6,6)),((0,6,0),(6,6,0),(0,6,0))),
+		's':(((0,0,0),(0,7,7),(7,7,0)),((7,0,0),(7,7,0),(0,7,0)))}
 	speedunit = 65536
 	speedtuples = \
 		[(0, 1024), (30, 1536), (35, 2048), (40, 2560), (50, 3072), (60, 4096), (70, 8192),\
@@ -75,9 +76,9 @@ class Model:
 		self.hold = '';
 		for _ in range(4):
 			self.next.append(next(self.randomizer))
-		self.piecepos = (21,3,0) #col, row, rotation. this is initial spawn value.
+		self.piecepos = [20,3,0] #col, row, rotation. this is initial spawn value.
 		self.dropcounter = 0 #drop one line per gravunit. -1 if piece is on ground state
-		self.speedvar = (1024, 25, 25, 14, 30, 40)
+		self.speedvar = [1024, 25, 25, 14, 30, 40]
 		self.vg = self.setvar()
 		self.sg = self.setspeed()
 		#same order with speedtuples. first value is current speed.
@@ -88,61 +89,61 @@ class Model:
 	def checkpoint(self, point):
 		try:
 			if self.stack[point[0]][point[1]] != 0:
-				return false
+				return False
 			else:
-				return true
+				return True
 		except:
 			return False
 
 	def colcheck(self, piece, piecepos):
-		arrsize = len(piecedict[piece][piecepos[2]])
-		return all([checkpoint((piecepos[0] - c, piecepos[1] + l)) \
+		arrsize = len(self.piecedict[piece][piecepos[2]])
+		return all([self.checkpoint((piecepos[0] - c, piecepos[1] + l)) \
 			for c, l in itertools.product(range(arrsize), range(arrsize)) \
-			if piecedict[piece][piecepos[2]][c][l] != 0])
+			if self.piecedict[piece][piecepos[2]][c][l] != 0])
 
 	def isdropable(self, piece, piecepos):
-		temppos = piecepos; temppos[0] -= 1
-		return colcheck(piece, temppos)
+		temppos = piecepos[:]; temppos[0] -= 1
+		return self.colcheck(piece, temppos)
 
 	def rotate(self, direction):
-		temppos = self.piecepos
+		temppos = self.piecepos[:]
 		#exceptional rule for l, j, t prevent from rotating
-		if (self.next[0] in ('l', 'j', 't') and \
-			temppos[2] in (0, 2) and checkpoint(temppos[0], temppos[1] + 1) == False):
+		if self.next[0] in ('l', 'j', 't') and \
+			temppos[2] in (0, 2) and self.checkpoint([temppos[0], temppos[1] + 1]) == False:
 			return False
 		elif (self.next[0] in ('l', 'j') and \
-			((temppos[2] == 0 and checkpoint(temppos[0] + 2, temppos[1] + 1) == False) or \
-			(temppos[2] == 2 and checkpoint(temppos[0] + 1, temppos[1] + 1) == False))):
-			if (self.next[0] == 'j' and checkpoint([temppos[0], temppos[1] + 2]) == True) or \
-				(self.next[0] == 'l' and checkpoint([temppos[0], temppos[1]]) == True):
+			((temppos[2] == 0 and self.checkpoint([temppos[0]- 2,temppos[1] + 1]) == False) or \
+			(temppos[2] == 2 and self.checkpoint([temppos[0] - 1, temppos[1] + 1]) == False))):
+			if (self.next[0] == 'j' and self.checkpoint([temppos[0], temppos[1] + 2]) == True) \
+			or (self.next[0] == 'l' and self.checkpoint([temppos[0], temppos[1]]) == True):
 				return False
 		temppos[2] += direction; temppos[2] %= len(self.piecedict[self.next[0]])
-		if colcheck(self.next[0], temppos):
+		if self.colcheck(self.next[0], temppos):
 			self.piecepos = temppos; return True
 		#Wallkick
 		temppos[1] = self.piecepos[1] + 1
-		if colcheck(self.next[0], temppos):
+		if self.colcheck(self.next[0], temppos):
 			self.piecepos = temppos; return True
 		temppos[1] = self.piecepos[1] - 1
-		if colcheck(self.next[0], temppos):
+		if self.colcheck(self.next[0], temppos):
 			self.piecepos = temppos; return True
 		#Additional Wallkick and Floorkick for I piece
 		if self.next[0] == 'i':
 			temppos[1] = self.piecepos[1] + 2
-			if colckeck(self.next[0], temppos):
+			if self.colcheck(self.next[0], temppos):
 				self.piecepos = temppos; return True
-			if isdropable(self.next[0], self.piecepos):
+			if self.isdropable(self.next[0], self.piecepos):
 				#Floorkick of I set its lock delay to 0
 				temppos[1] = self.piecepos[1]; temppos[0] = self.piecepos[0] + 1
-				if colcheck(self.next[0], temppos):
+				if self.colcheck(self.next[0], temppos):
 					self.piecepos = temppos; self.speedvar[4] = 0; return True
 				temppos[0] = self.piecepos[0] + 2
-				if colcheck(self.next[0], temppos):
+				if self.colcheck(self.next[0], temppos):
 					self.piecepos = temppos; self.speedvar[4] = 0; return True
 		#Floorkick for T piece
 		if self.next[0] == 't':
 			temppos[1] = self.piecepos[1]; temppos[0] = self.piecepos[0] + 1
-			if colcheck(self.next[0], temppos):
+			if self.colcheck(self.next[0], temppos):
 				self.piecepos = temppos; return True
 		return False
 
@@ -150,53 +151,55 @@ class Model:
 		curvar = self.vartuples[0]
 		for vartuple in self.vartuples:
 			while vartuple[0] > self.level:
-				self.speedvar = self.speedvar[0:1]+list(vartuple[1:])
+				self.speedvar = self.speedvar[0:1]+list(curvar[1:])
 				yield
-			curval = vartuple
+			curvar = vartuple
 		while True:
-			self.speedvar = self.speedvar[0:1]+list(vartuple[1:])
+			self.speedvar = self.speedvar[0:1]+list(curvar[1:])
 			yield
 
 	def setspeed(self):
 		curspeed = self.speedtuples[0]
 		for speedtuple in self.speedtuples:
 			while speedtuple[0] > self.level:
-				self.speedvar = list(speedtuple[1:]) + self.speedvar[1:]
+				self.speedvar = list(curspeed[1:]) + self.speedvar[1:]
 				yield
 			curspeed = speedtuple
 		while True:
-			self.speedvar = self.speedvar[1:]+list(vartuple[1:])
+			self.speedvar = list(curspeed[1:]) + self.speedvar[1:]
 			yield
 
 	def setspeedvar(self):
 		next(self.vg)
 		next(self.sg)
 
-	def hold(self):
+	def holdpiece(self):
 		try:
-			if hold.timer == self.level:
+			if self.holdtimer == self.level:
 				return False
 		except:
 			pass
-		hold.timer = self.level
+		self.holdtimer = self.level
 		if self.hold == '':
 			self.hold = self.next[0]
 			self.next.popleft()
 			self.next.append(next(self.randomizer))
 		else:
 			self.hold, self.next[0] = self.next[0], self.hold
+		self.piecepos = [20,3,0]
 
 	def setpiece(self):
 		for c, col in enumerate(self.piecedict[self.next[0]][self.piecepos[2]]):
 			for r, row in enumerate(col):
 				if row != 0:
-					self.stack[self.piecepos[0]-c][self.piecepos[1]+r] = r
-		self.next[0] = None
+					self.stack[self.piecepos[0]-c][self.piecepos[1]+r] = row
+		self.next[0] = ''
 
 	def stackcheck(self):
 		cline = []
 		for i, row in enumerate(self.stack):
 			if all(block > 0 for block in row):
+				self.stack[i] = (0,0,0,0,0,0,0,0,0,0)
 				cline.append(i)
 		return cline
 
@@ -206,19 +209,22 @@ class Model:
 		yield #for start
 		while(True):
 			#Spawn phase
+			linermd = False
 			self.setspeedvar()
-			self.piecepos = (21, 3, 0)
-			if not colcheck(self.next[0], self.piecepos):
+			self.piecepos = [20, 3, 0]
+			if not self.colcheck(self.next[0], self.piecepos):
 				break
 			#Initial process phase
 			intup = yield #intup is tuple of four value, (left/right),(up/down),(b/a),(hold)
 			self.tickcount += 1
 			if intup[3] > 0:
-				self.hold()
+				self.holdpiece()
 			if intup[2] != 0:
 				self.rotate(1 if intup[2] > 0 else -1)
 			if intup[1] < 0:
 				self.dropcounter += self.speedunit * 20
+			if self.isdropable(self.next[0], self.piecepos):
+				self.dropcounter += self.speedvar[0]
 			while self.dropcounter >= self.speedunit and \
 				self.isdropable(self.next[0], self.piecepos):
 				self.dropcounter -= self.speedunit
@@ -227,19 +233,21 @@ class Model:
 				self.dropcounter = 0
 				delaycounter += 1
 			#Process phase
-			while(true):
+			while(True):
 				intup = yield
 				self.tickcount += 1
 				if intup[3] == 1:
-					self.hold()
+					self.holdpiece()
 				if abs(intup[2]) == 1:
 					self.rotate(intup[2])
 				if abs(intup[0]) == 1 or abs(intup[0]) >= self.speedvar[3]:
-					temppos = self.piecepos; temppos[1] += intup[0]/abs(intup[0])
-					if self.colcheck(self.next[0], self.temppos):
+					temppos = self.piecepos[:]; temppos[1] += intup[0] // abs(intup[0])
+					if self.colcheck(self.next[0], temppos):
 						self.piecepos = temppos
 				if intup[1] < 0:
 					self.dropcounter += self.speedunit * 20
+				if self.isdropable(self.next[0], self.piecepos):
+					self.dropcounter += self.speedvar[0]
 				while self.dropcounter >= self.speedunit and \
 					self.isdropable(self.next[0], self.piecepos):
 					self.dropcounter -= self.speedunit
@@ -248,31 +256,40 @@ class Model:
 				if not self.isdropable(self.next[0], self.piecepos):
 					self.dropcounter = 0
 					delaycounter += 1
-				if (delaycounter > 0 and intup[1] > 0) or delaycounter >= self.speedvar[4]:
+				if (not self.isdropable(self.next[0], self.piecepos) and intup[1] > 0) \
+					or delaycounter >= self.speedvar[4]:
 					break
 			self.setpiece()
 			delaycounter = 0
 			cline = self.stackcheck()
 			#Line Clear Delay + Line Clear ARE
 			if cline != []:
-				while delaycounter >= self.speedvar[5]:
+				while delaycounter <= self.speedvar[5]:
 					yield cline
 					self.tickcount += 1
 					delaycounter += 1
-				for c in cline:
-					self.stack.pop(c)
-					self.stack.append(PosList([0]*10))
+				try:
+					while True:
+						self.stack.remove((0,0,0,0,0,0,0,0,0,0))
+						self.stack.append(PosList([0]*10))
+						self.level += 1
+						self.linermd = True
+				except:
+					pass
 				delaycounter = 0
-				while delaycounter >= self.speedvar[2]:
+				while delaycounter <= self.speedvar[2]:
 					yield
 					self.tickcount += 1
 					delaycounter += 1
 			#ARE without Line Clear
 			else:
-				while delaycounter >= self.speedvar[1]:
+				while delaycounter <= self.speedvar[1]:
 					yield
 					self.tickcount += 1
 					delaycounter += 1
+			if self.level % 100 != 99 and not linermd:
+				self.level += 1
 			self.next.popleft()
 			self.next.append(next(self.randomizer))
+			print("level: {}".format(self.level))
 		return "Game Over"

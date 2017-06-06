@@ -6,14 +6,12 @@ import sdl2.ext
 
 class Ctrl:
 	def __init__(self):
-		self.viewer = view.View()
+		sdl2.ext.init()
 		self.model = model.Model('', time.time())
+		self.view = view.View(self.model)
 		self.framerate = 60;
 
 	def run(self):
-		sdl2.ext.init()
-		window = sdl2.ext.Window("PyTGM Alpha", size=(1280, 720))
-		window.show()
 		next(self.model.tick)
 		self.keydict = { #key mapped here
 			sdl2.SDLK_a:[False,False, 0, -1], #left
@@ -52,8 +50,7 @@ class Ctrl:
 						self.intup[self.keydict[key][2]] = 0
 					self.keydict[key][1] = self.keydict[key][0]
 			self.model.tick.send(self.intup)
-			#screen render will perform here
-			window.refresh()
+			next(self.view.render)
 			d = sdl2.timer.SDL_GetTicks()
 			sdl2.timer.SDL_Delay(max((tick*1000)//self.framerate-d+t, 0))
 		return
