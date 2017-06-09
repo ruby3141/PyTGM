@@ -84,6 +84,7 @@ class Model:
 		#same order with speedtuples. first value is current speed.
 		self.level = 1
 		self.indicatedlevel = 1
+		self.state = ["init"]
 		self.tick = self.processor()
 
 	def checkpoint(self, point):
@@ -181,6 +182,7 @@ class Model:
 			pass
 		self.holdtimer = self.level
 		if self.hold == '':
+			self.state.append('hold')
 			self.hold = self.next[0]
 			self.next.popleft()
 			self.next.append(next(self.randomizer))
@@ -215,6 +217,7 @@ class Model:
 			if not self.colcheck(self.next[0], self.piecepos):
 				break
 			#Initial process phase
+			self.state = ['spawn']
 			intup = yield #intup is tuple of four value, (left/right),(up/down),(b/a),(hold)
 			self.tickcount += 1
 			if intup[3] > 0:
@@ -234,6 +237,7 @@ class Model:
 				delaycounter += 1
 			#Process phase
 			while(True):
+				self.state = ['process']
 				intup = yield
 				self.tickcount += 1
 				if intup[3] == 1:
@@ -254,6 +258,7 @@ class Model:
 					self.piecepos[0] -= 1
 					delaycounter = 0
 				if not self.isdropable(self.next[0], self.piecepos):
+					self.state.append('lockdelay')
 					self.dropcounter = 0
 					delaycounter += 1
 				if (not self.isdropable(self.next[0], self.piecepos) and intup[1] > 0) \
@@ -264,8 +269,9 @@ class Model:
 			cline = self.stackcheck()
 			#Line Clear Delay + Line Clear ARE
 			if cline != []:
+				self.state = ['lineclear'] + cline
 				while delaycounter <= self.speedvar[5]:
-					yield cline
+					yield
 					self.tickcount += 1
 					delaycounter += 1
 				try:
@@ -277,12 +283,14 @@ class Model:
 				except:
 					pass
 				delaycounter = 0
+				self.state = ['are','lineclear']
 				while delaycounter <= self.speedvar[2]:
 					yield
 					self.tickcount += 1
 					delaycounter += 1
 			#ARE without Line Clear
 			else:
+				self.state = ['are']
 				while delaycounter <= self.speedvar[1]:
 					yield
 					self.tickcount += 1

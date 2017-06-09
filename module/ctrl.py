@@ -1,5 +1,6 @@
 import module.model as model
 import module.view as view
+import module.audio as audio
 import time
 import sdl2
 import sdl2.ext
@@ -9,6 +10,7 @@ class Ctrl:
 		sdl2.ext.init()
 		self.model = model.Model('', time.time())
 		self.view = view.View(self.model)
+		self.audio = audio.Audio(self.model)
 		self.framerate = 60;
 
 	def run(self):
@@ -51,6 +53,7 @@ class Ctrl:
 					self.keydict[key][1] = self.keydict[key][0]
 			self.model.tick.send(self.intup)
 			next(self.view.render)
+			next(self.audio.player)
 			d = sdl2.timer.SDL_GetTicks()
 			sdl2.timer.SDL_Delay(max((tick*1000)//self.framerate-d+t, 0))
 		return
